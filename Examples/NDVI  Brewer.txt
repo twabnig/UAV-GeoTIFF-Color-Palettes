@@ -1,0 +1,238 @@
+pacman::p_load(raster,rasterImage,rgdal,tidyverse,psych,RColorBrewer,patchwork)
+
+RColorBrewer::display.brewer.all()
+
+setwd("M:/Egger GeoTIFFS")
+
+red <- raster(x ="red.tif")
+nir <- raster(x ="nir.tif")
+ndvi <- (nir-red)/(nir+red)
+dim(ndvi)
+
+## We crop the image to the center, because it otherwise takes too long, but this step can also be skipped.
+e <- extent(443100,443200,5171900,5172000)
+ndvi <- crop(ndvi, e)
+dim(ndvi)
+##
+   ndvi_df <- as.data.frame(values(ndvi)) 
+   describe(ndvi_df)
+   ndvi_df <- na.omit(ndvi_df)
+   ndvi_df <- subset(ndvi_df, ndvi_df > -1)
+   ndvi_df <- subset(ndvi_df, ndvi_df < 1)
+   ndvi_df <- subset(ndvi_df, ndvi_df != 0)
+   tab <- table(ndvi_df)
+   ## barplot(tab, xlab="NDVI-value", ylab="Frequency", main="NDVI Sample Distribution") # Takes a while.
+
+## This structure is similar to the Thomae Function (Popcorn Function, Stars over Babylon, Modified Dirichlet Function, Raindrop Function, Ruler Function).
+## It appears in the data as a consequence of the Law of Large numbers, that guarantees a "convergence in distribution" for random processes, and large sample sizes.
+## In simple terms, it is the Sampling Distribution for 2 n-polyhedral dice with 65536-faces.
+## It is also related to the Farey Series, Ford Circles, Ford Spheres, the Mandelbrot Set, and the Riemann Xi-Function.
+
+## For illustration purposes, we only barplot a subset of 10000 values (instead of the 33 Million values).
+
+   subs <- sample_n(ndvi_df, 10000)
+   barplot(table(subs), xlab="NDVI-value", ylab="Frequency", main="NDVI Sample Distribution")
+
+## We assign it to a raster, so we can plot it with GGplot.
+
+ndvi_rasterframe <- as.data.frame(ndvi, xy = TRUE)
+ndvi_rasterframe$layer[is.nan(ndvi_rasterframe$layer)]<-NA
+
+## NDVI with Viridis Color Maps
+
+magma <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_viridis_c(option = "magma") +
+    coord_quickmap() + 
+    ggtitle("NDVI-Viridis(magma)")
+
+inferno <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_viridis_c(option = "inferno") +
+    coord_quickmap() + 
+    ggtitle("NDVI-Viridis(inferno)")
+
+plasma <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_viridis_c(option = "plasma") +
+    coord_quickmap() + 
+    ggtitle("NDVI-Viridis(plasma)")
+
+viridis <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_viridis_c(option = "viridis") +
+    coord_quickmap() + 
+    ggtitle("NDVI-Viridis(viridis)")
+
+cividis <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_viridis_c(option = "cividis") +
+    coord_quickmap() + 
+    ggtitle("NDVI-Viridis(cividis)")
+
+rocket <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_viridis_c(option = "rocket") +
+    coord_quickmap() + 
+    ggtitle("NDVI-Viridis(rocket)")
+
+mako <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_viridis_c(option = "mako") +
+    coord_quickmap() + 
+    ggtitle("NDVI-Viridis(mako)")
+
+turbo <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_viridis_c(option = "turbo") +
+    coord_quickmap() + 
+    ggtitle("NDVI-Viridis(turbo)")
+
+dev.new(title="", width=1536, height=864)
+magma + inferno + plasma + viridis + cividis + rocket + mako + turbo + plot_layout(ncol = 4)
+
+## NDVI with Standard Colors
+
+rainbow <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_gradientn(colours = rainbow(7)) +
+    coord_quickmap() + 
+    ggtitle("NDVI - rainbow.colors")
+
+
+heat <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_gradientn(colours = heat.colors(7)) +
+    coord_quickmap() + 
+    ggtitle("NDVI - heat.colors")
+
+terrain <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_gradientn(colours = terrain.colors(7)) +
+    coord_quickmap() + 
+    ggtitle("NDVI - terrain.colors")
+
+topo <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_gradientn(colours = topo.colors(7)) +
+    coord_quickmap() + 
+    ggtitle("NDVI - topo.colors")
+
+cm <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_gradientn(colours = cm.colors(7)) +
+    coord_quickmap() + 
+    ggtitle("NDVI - cm.colors")
+
+
+## NDVI with inverse Standard Colors
+
+inv_rainbow <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_gradientn(colours = rev(rainbow(7))) +
+    coord_quickmap() + 
+    ggtitle("NDVI - inverse rainbow.colors")
+
+
+inv_heat <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_gradientn(colours = rev(heat.colors(7))) +
+    coord_quickmap() + 
+    ggtitle("NDVI - inverse heat.colors")
+
+inv_terrain <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_gradientn(colours = rev(terrain.colors(7))) +
+    coord_quickmap() + 
+    ggtitle("NDVI - inverse terrain.colors")
+
+inv_topo <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_gradientn(colours = rev(topo.colors(7))) +
+    coord_quickmap() + 
+    ggtitle("NDVI - inverse topo.colors")
+
+inv_cm <- ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_gradientn(colours = rev(cm.colors(7))) +
+    coord_quickmap() + 
+    ggtitle("NDVI - inverse cm.colors")
+
+
+x11()
+dev.new(title="", width=1536, height=864)
+rainbow + heat + terrain + topo + cm + inv_rainbow + inv_heat + inv_terrain + inv_topo + inv_cm + plot_layout(ncol = 5)
+
+## NDVI with custom color palette for "PLANT HEALTH". "Turbo-Colors" are rearranged. 
+## Reddish colors (NDVI <1) should represent soil, then there are 3 shades of blue (water, ice, soil), and 5 classes for "plant-health".
+## For a lower NDVI-value (=low plant health), one might expect the plants to be more orange-brownish-yellowish, and increasingly more green for higer values.
+
+
+turbo.pal <- function(n, palette) {
+  switch(palette,
+"ndvi_turbo" = colorRampPalette(c("#830000","#ff2e00","#ff7272","#000080","#0000fe","#00d3ff","#fcff03","#ff8200","#7eff81","#08c20c","#07700a"))(n) )
+}
+
+barplot(1:11, col=c("#830000","#ff2e00","#ff7272","#000080","#0000fe","#00d3ff","#fcff03","#ff8200","#7eff81","#08c20c","#07700a"), main="Custom colors for plant health", sub="3 low values for soil, 3 middle values for water/ice, 5 values for plant health")
+
+breaks <- seq(-1, 1, by = 0.01)
+my_palette <- turbo.pal(11, "ndvi_turbo")
+
+x11()
+
+dev.new(title="Custom Colors for NDVI", width=1920*0.75, height=1080*0.75)
+ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_gradientn(colours=c(my_palette))+
+    coord_quickmap() + 
+    ggtitle("NDVI-Custom (Turbo Colors re-arranged)")
+
+
+## PLOT NDVI with CUSTOM COLORS II
+## NDVI can also be used to distinguish vegetated,- from non-vegetated areas.
+## Colors ~0 and <0 represent soil, concrete, roads,...
+## Values >0 get increasingly more green.
+
+dev.new(title="Custom Colors for NDVI", width=1920*0.75, height=1080*0.75)
+par(mfrow=c(2,3))
+
+custom_col1 <- colorRampPalette(c("tan4", "tan", "greenyellow"))(length(breaks) - 1)
+ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_gradientn(colours=c(custom_col1))+
+    coord_quickmap() + 
+    ggtitle("NDVI-Custom (RGB-like coloring 1)")
+
+
+custom_col2  <- colorRampPalette(c("tan4", "burlywood4", "burlywood3", "greenyellow"))(length(breaks) - 1)
+ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_gradientn(colours=c(custom_col2))+
+    coord_quickmap() + 
+    ggtitle("NDVI-Custom (RGB-like coloring 2)")
+
+custom_col3  <- colorRampPalette(c("tan4", "burlywood4", "burlywood3", "darkgreen", "greenyellow"))(length(breaks) - 1)
+ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_gradientn(colours=c(custom_col3))+
+    coord_quickmap() + 
+    ggtitle("NDVI-Custom (RGB-like coloring 3)")
+
+custom_col4 <- colorRampPalette(c("darkgrey", "tan4", "burlywood4", "darkgreen", "greenyellow"))(length(breaks) - 1)
+ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_gradientn(colours=c(custom_col4))+
+    coord_quickmap() + 
+    ggtitle("NDVI-Custom (RGB-like coloring 4)")
+
+custom_col5  <- colorRampPalette(c("tan4", "burlywood4", "darkgrey", "darkgreen", "greenyellow"))(length(breaks) - 1)
+ggplot() +
+    geom_raster(data = ndvi_rasterframe , aes(x = x, y = y, fill = layer)) +
+    scale_fill_gradientn(colours=c(custom_col5))+
+    coord_quickmap() + 
+    ggtitle("NDVI-Custom (RGB-like coloring 5 - My favorite)")
+
+
+
+
+
